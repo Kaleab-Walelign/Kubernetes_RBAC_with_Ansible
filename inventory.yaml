@@ -1,0 +1,42 @@
+clusters:
+  - name: cluster1
+    kubeconfig: /path/to/cluster1/kubeconfig
+  - name: cluster2
+    kubeconfig: /path/to/cluster2/kubeconfig
+  - name: cluster3
+    kubeconfig: /path/to/cluster3/kubeconfig
+  - name: cluster4
+    kubeconfig: /path/to/cluster4/kubeconfig
+  - name: cluster5
+    kubeconfig: /path/to/cluster5/kubeconfig
+
+groups:
+  - name: admins
+    permissions:
+      apiGroups: ["*"]
+      resources: ["*"]
+      verbs: ["*"]
+
+  - name: ops
+    permissions:
+      apiGroups: ["apps", "batch"]
+      resources: ["deployments", "jobs"]
+      verbs: ["get", "list", "create", "update", "delete"]
+
+  - name: devs
+    permissions:
+      apiGroups: ["apps"]
+      resources: ["pods", "services"]
+      verbs: ["get", "list", "watch"]
+
+  - name: security
+    permissions:
+      apiGroups: ["networking.k8s.io"]
+      resources: ["networkpolicies"]
+      verbs: ["get", "list", "watch", "create", "update"]
+
+  - name: viewers
+    permissions:
+      apiGroups: [""]
+      resources: ["pods", "services", "configmaps"]
+      verbs: ["get", "list"]
