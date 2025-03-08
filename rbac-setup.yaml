@@ -1,0 +1,51 @@
+- name: Apply RBAC to Multiple Clusters
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Load inventory file
+      include_vars:
+        file: inventory.yaml
+        name: inventory
+
+    - name: Apply RBAC roles and bindings in each cluster
+      loop: "{{ inventory.clusters }}"
+      loop_control:
+        loop_var: cluster
+      environment:
+        KUBECONFIG: "{{ cluster.kubeconfig }}"
+      tasks:
+        - name: Create ClusterRoles for each group
+          loop: "{{ inventory.groups }}"
+          loop_control:
+            loop_var: group
+          kubernetes.core.k8s:
+            state: present
+            definition:
+              apiVersion: rbac.authorization.k8s.io/v1
+              kind: ClusterRole
+              metadata:
+                name: "{{ group.name }}-role"
+              rules:
+                - apiGroups: "{{ group.permissions.apiGroups }}"
+                  resources: "{{ group.permissions.resources }}"
+                  verbs: "{{ group.permissions.verbs }}"
+
+        - name: Bind LDAP groups to ClusterRoles
+          loop: "{{ inventory.groups }}"
+          loop_control:
+            loop_var: group
+          kubernetes.core.k8s:
+            state: present
+            definition:
+              apiVersion: rbac.authorization.k8s.io/v1
+              kind: ClusterRoleBinding
+              metadata:
+                name: "{{ group.name }}-binding"
+              subjects:
+                - kind: Group
+                  name: "{{ group.name }}"  # LDAP Group Name
+                  apiGroup: rbac.authorization.k8s.io
+              roleRef:
+                kind: ClusterRole
+                name: "{{ group.name }}-role"
+                apiGroup: rbac.authorization.k8s.io
